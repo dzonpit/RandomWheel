@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Колесо Фортуны</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            background: radial-gradient(circle at center, #2b0000 0%, #000000 100%);
+            cursor: pointer;
+        }
+        
+        .main-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .wheel-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .chat-section {
+            width: 300px;
+            background: rgba(20, 0, 0, 0.7);
+            border-left: 1px solid #ff6600;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-title {
+            color: #ff9966;
+            text-align: center;
+            padding: 10px;
+            border-bottom: 1px solid #ff6600;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .message {
+            background: rgba(50, 10, 10, 0.6);
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 2px solid #ff6600;
+            animation: messageAppear 0.3s ease-out;
+        }
+        
+        @keyframes messageAppear {
+            from { opacity: 0; transform: translateX(10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .username {
+            color: #ff9966;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .message-text {
+            color: #ffcc99;
+        }
+        
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            filter: drop-shadow(0 0 30px rgba(255, 100, 0, 0.7));
+        }
+        
+        .wheel {
+            width: 100%;
+            height: 100%;
+            transform-origin: center;
+            transition: transform 0.1s linear;
+            border-radius: 50%;
+            transform: rotate(0deg);
+        }
+        
+        .pointer {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            z-index: 10;
+            filter: drop-shadow(0 0 15px rgba(255, 50, 0, 0.9));
+        }
+        
+        .pointer::after {
+            content: "▼";
+            font-size: 50px;
+            color: #ff3300;
+            text-shadow: 0 0 10px #ff6600;
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            color: #ff9966;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 12px 25px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 20px;
+            text-shadow: 0 0 10px #ff3300;
+            box-shadow: 0 0 20px rgba(255, 80, 0, 0.5);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(to bottom, #3a0a0a, #1a0000);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 400px;
+            border: 2px solid #ff6600;
+            box-shadow: 0 0 40px rgba(255, 80, 0, 0.7);
+            animation: modalAppear 0.5s ease-out;
+        }
+        
+        @keyframes modalAppear {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-title {
+            color: #ff9966;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #ff3300;
+        }
+        
+        .modal-button {
+            background: linear-gradient(to bottom, #ff6600, #cc3300);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(255, 80, 0, 0.5);
+            transition: all 0.3s;
+        }
+        
+        .modal-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 80, 0, 0.7);
+        }
+        
+        .modal-button:active {
+            transform: translateY(1px);
+        }
+        
+        .prize-0.5 { color: #aaffaa; }
+        .prize-1 { color: #77ff77; }
+        .prize-5 { color: #00ff00; font-weight: bold; }
+        .prize-channel { color: #55aaff; }
+        .prize-premium { color: #ffaa00; font-weight: bold; }
+        .prize-retry { color: #ff6666; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="wheel-section">
+            <div class="wheel-container">
+                <img src="images/1.png" class="wheel" id="wheel" alt="Колесо Фортуны">
+                <div class="pointer"></div>
+            </div>
+            <div class="instructions">Кликните в любом месте, чтобы вращать колесо</div>
+        </div>
+        
+        <div class="chat-section">
+            <div class="chat-title">LIVE ЧАТ</div>
+            <div class="chat-messages" id="chatMessages"></div>
+        </div>
+    </div>
+    
+    <!-- Модальные окна -->
+    <div id="winModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">ПОЗДРАВЛЯЕМ!</h2>
+            <p style="color: #ff9966; font-size: 20px;">Вам доступен бесплатный доступ к закрытому TELEGRAM каналу</p>
+            <a href="https://t.me/+EXPbOjfb4pZiMGI6" id="telegramLink" style="display: none;"></a>
+            <button class="modal-button" id="goToTelegram">ПЕРЕЙТИ</button>
+        </div>
+    </div>
+    
+    <div id="retryModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title">ПЕРЕКРУТ</h2>
+            <p style="color: #ff9966; font-size: 20px;">Попробуйте удачу еще раз!</p>
+            <button class="modal-button" id="spinAgain">ВРАЩАТЬ</button>
+        </div>
+    </div>
+
+    <script>
+        const wheel = document.getElementById('wheel');
+        const winModal = document.getElementById('winModal');
+        const retryModal = document.getElementById('retryModal');
+        const goToTelegram = document.getElementById('goToTelegram');
+        const spinAgain = document.getElementById('spinAgain');
+        const telegramLink = document.getElementById('telegramLink');
+        const chatMessages = document.getElementById('chatMessages');
+        
+        let isSpinning = false;
+        let animationId;
+        
+        // Генерация случайных пользователей в формате UserXXXX
+        function generateRandomUsers(count) {
+            const users = [];
+            for (let i = 0; i < count; i++) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000); // 1000-9999
+                users.push(`User${randomNum}`);
+            }
+            return users;
+        }
+
+        const fakeUsers = generateRandomUsers(15); // 15 случайных пользователей
+        
+        // Список возможных выигрышей
+        const prizes = [
+            {type: "ton", amount: 0.5, class: "prize-0.5", text: "выиграл 0.5 TON"},
+            {type: "ton", amount: 1, class: "prize-1", text: "выиграл 1 TON"},
+            {type: "ton", amount: 5, class: "prize-5", text: "выиграл 5 TON!!! 🎉"},
+            {type: "channel", class: "prize-channel", text: "получил ДОСТУП К КАНАЛУ"},
+            {type: "premium", class: "prize-premium", text: "выиграл TELEGRAM PREMIUM!"},
+            {type: "retry", class: "prize-retry", text: "получил ПЕРЕКРУТ"}
+        ];
+        
+        // Инициализация чата
+        function initializeChat() {
+            // Добавляем 5 начальных сообщений
+            for (let i = 0; i < 5; i++) {
+                addRandomMessage();
+            }
+            
+            // Запускаем таймер для добавления новых сообщений
+            setInterval(addRandomMessage, 3000 + Math.random() * 5000);
+        }
+        
+        // Добавление случайного сообщения в чат
+        function addRandomMessage() {
+            const user = fakeUsers[Math.floor(Math.random() * fakeUsers.length)];
+            const prize = prizes[Math.floor(Math.random() * prizes.length)];
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.innerHTML = `
+                <span class="username">${user}:</span>
+                <span class="message-text ${prize.class}">${prize.text}</span>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            
+            // Прокручиваем чат вниз
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Ограничиваем количество сообщений
+            if (chatMessages.children.length > 50) {
+                chatMessages.removeChild(chatMessages.children[0]);
+            }
+        }
+        
+        // Добавление сообщения о реальном выигрыше
+        function addRealMessage(prizeType) {
+            const prize = prizes.find(p => p.type === prizeType);
+            if (!prize) return;
+            
+            const user = "Вы";
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message';
+            messageElement.style.animation = 'messageAppear 0.3s ease-out';
+            messageElement.style.borderLeft = '2px solid #ff3300';
+            messageElement.innerHTML = `
+                <span class="username" style="color: #ff3300; font-weight: bold;">${user}:</span>
+                <span class="message-text ${prize.class}" style="font-weight: bold;">${prize.text}</span>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        // Обработчик клика в любом месте
+        document.addEventListener('click', function() {
+            if (!isSpinning) {
+                startSpinning();
+            }
+        });
+        
+        // Обработчики кнопок модальных окон
+        goToTelegram.addEventListener('click', function() {
+            winModal.style.display = 'none';
+            telegramLink.click();
+        });
+        
+        spinAgain.addEventListener('click', function() {
+            retryModal.style.display = 'none';
+            startSpinning();
+        });
+        
+        function startSpinning() {
+            if (isSpinning) return;
+            
+            isSpinning = true;
+            
+            // Сбрасываем колесо в начальное положение
+            wheel.style.transition = 'none';
+            wheel.style.transform = 'rotate(0deg)';
+            
+            setTimeout(() => {
+                // Случайно выбираем остановку на 180° или 360°
+                const targetDegrees = Math.random() > 0.5 ? 180 : 360;
+                spinWheel(targetDegrees);
+            }, 10);
+        }
+        
+        function spinWheel(targetDegrees) {
+            const spinDuration = 3000;
+            const slowdownDuration = 2000;
+            const fullSpins = 3;
+            const totalRotation = fullSpins * 360 + targetDegrees;
+            
+            wheel.style.transition = `transform ${slowdownDuration}ms cubic-bezier(0.1, 0.7, 0.1, 1)`;
+            
+            const startTime = Date.now();
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                
+                if (elapsed < spinDuration) {
+                    const progress = elapsed / spinDuration;
+                    const currentRotation = easeOutQuad(progress) * fullSpins * 360;
+                    wheel.style.transform = `rotate(${currentRotation}deg)`;
+                    animationId = requestAnimationFrame(animate);
+                } else if (elapsed < spinDuration + slowdownDuration) {
+                    const progress = (elapsed - spinDuration) / slowdownDuration;
+                    const currentRotation = fullSpins * 360 + easeInOutQuad(progress) * targetDegrees;
+                    wheel.style.transform = `rotate(${currentRotation}deg)`;
+                    animationId = requestAnimationFrame(animate);
+                } else {
+                    wheel.style.transform = `rotate(${totalRotation}deg)`;
+                    isSpinning = false;
+                    
+                    setTimeout(() => {
+                        if (targetDegrees === 180) {
+                            addRealMessage('channel');
+                            winModal.style.display = 'flex';
+                        } else {
+                            addRealMessage('retry');
+                            retryModal.style.display = 'flex';
+                        }
+                    }, 500);
+                }
+            }
+            
+            animate();
+        }
+        
+        // Функции для плавности анимации
+        function easeOutQuad(t) {
+            return t * (2 - t);
+        }
+        
+        function easeInOutQuad(t) {
+            return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        }
+        
+        // Инициализируем чат при загрузке
+        initializeChat();
+    </script>
+</body>
+</html>
